@@ -20,6 +20,7 @@ assert "__ART_" not in styles, "Unresolved artwork placeholder"
 
 body = (ROOT / "src/body.html").read_text()
 script = (ROOT / "src/game.js").read_text()
+icon = base64.b64encode((ROOT / "assets/agent-fetch-icon.svg").read_bytes()).decode()
 page = '''<!doctype html>
 <html lang="es">
 <head>
@@ -28,6 +29,7 @@ page = '''<!doctype html>
 <meta name="theme-color" content="#0c1c31">
 <meta name="description" content="Agent Fetch: una misión de doce expedientes. Salta, encadena puntos y demuestra quién es el mejor agente de la ciudad.">
 <title>Agent Fetch — Operación expediente</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,''' + icon + '''">
 <style>
 ''' + styles + '''</style>
 </head>
