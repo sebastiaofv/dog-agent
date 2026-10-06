@@ -8,6 +8,7 @@ Play: https://sebastiaofv.github.io/dog-agent/
 
 - Move with Left/Right or A/D, or drag across the play area.
 - Jump with Space, Up or W. Mobile also has movement and Jump buttons.
+- Missing 10 complaints ends the mission. Click **Reiniciar misión** to reset all counters and play again.
 - Classify a caught case, then click **Continue mission** after filing completes. Confirmation stays open until you continue.
 
 ## Local development
@@ -28,7 +29,7 @@ Open http://127.0.0.1:8000/.
 node tests/game-regression.cjs
 ```
 
-These deterministic tests run the actual game script with DOM fixtures. They cover jumping, mobile input, classification, missing animation events, manual confirmation, the Materia counts for all 16 Productos and background-tab recovery. Check layout visually in a browser as well.
+These deterministic tests run the actual game script with DOM fixtures. They cover mission failure at ten misses and restarting, jumping, mobile input, classification, missing animation events, manual confirmation, the Materia counts for all 16 Productos and background-tab recovery. Check layout visually in a browser as well.
 
 The original generated jump sprite and its generation prompt are in `assets/`.
 

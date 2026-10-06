@@ -91,6 +91,50 @@ function game({width=390,height=844,motion=false}={}) {
   return {get,document,advance,until,dispatch,open,flies,catchCase,start,assertClear,selectProduct};
 }
 (async()=>{
+  for(const dimensions of [{width:320,height:568},{width:390,height:844},{width:844,height:390},{width:1440,height:900}]){
+    const g=game(dimensions);g.get('startBtn').click();
+    g.get('gameArea').dispatch('pointerdown',{clientX:0});g.get('gameArea').dispatch('pointerup');
+    await g.until(()=>Number(g.get('missedCount').textContent)===9,'Nine files must be missed',30000);
+    assert(!g.open('missionFailedOverlay'),'The mission must stay playable after nine misses');
+    assert(!g.get('jumpBtn').disabled,'Controls must still work at nine misses');
+    await g.until(()=>g.open('missionFailedOverlay'),'The tenth miss must fail the mission',5000);
+    assert.equal(Number(g.get('missedCount').textContent),10,'Mission must stop exactly at ten misses');
+    assert(g.get('leftBtn').disabled && g.get('rightBtn').disabled && g.get('jumpBtn').disabled && g.get('pauseBtn').disabled,'Failed missions must block gameplay controls');
+    assert.equal(g.get('gameArea').children.filter(el=>el.className==='complaint').length,0,'Failure must clear the falling files');
+    await g.advance(5000);assert.equal(Number(g.get('missedCount').textContent),10,'Files must stop spawning and falling after failure');
+    assert(g.open('missionFailedOverlay'),'The failure screen must wait for Restart');
+    g.get('restartBtn').click();assert(!g.open('missionFailedOverlay'),'Restart must close the failure screen');
+    for(const id of ['caughtCount','classifiedCount','missedCount'])assert.equal(Number(g.get(id).textContent),0,'Restart must reset every counter');
+    const centered=g.get('dog').style.left;
+    await g.advance(500);assert.equal(g.get('dog').style.left,centered,'Restart must not preserve old movement');
+    assert.equal(g.get('gameArea').children.filter(el=>el.className==='complaint').length,0,'New mission must start with a fresh spawn delay');
+    await g.catchCase();assert.equal(Number(g.get('caughtCount').textContent),1,'The restarted mission must catch files normally');
+    console.log(`PASS: ${dimensions.width}×${dimensions.height} fails on miss 10, freezes, resets and restarts`);
+  }
+  {
+    const g=game();await g.start();g.get('classifyBtn').click();
+    await g.until(()=>g.open('bucketOpenOverlay') && !g.get('closeBucketBtn').disabled,'A case must be filed before failure');
+    g.get('closeBucketBtn').click();
+    g.get('gameArea').dispatch('pointerdown',{clientX:0});g.get('gameArea').dispatch('pointerup');
+    await g.until(()=>Number(g.get('missedCount').textContent)===9,'Nine misses must occur after classification',30000);
+    await g.until(()=>g.get('gameArea').children.some(el=>el.className==='complaint' && parseFloat(el.style.top)>780),'The tenth file must approach the bottom',5000);
+    g.get('leftBtn').dispatch('pointerdown');g.get('jumpBtn').click();
+    assert(g.get('dog').classList.contains('jumping'));
+    await g.until(()=>g.open('missionFailedOverlay'),'The mission must fail during the jump',1500);
+    assert.equal(g.get('dog').style['--jump-offset'],'0px','Failure must settle an airborne dog');
+    assert.equal(Number(g.get('failureCaught').textContent),1,'Failure summary must preserve caught cases');
+    assert.equal(Number(g.get('failureClassified').textContent),1,'Failure summary must preserve classified cases');
+    assert(!g.open('caseModal') && !g.open('bucketOpenOverlay'),'Failure must not leave overlapping dialogs');
+    assert.equal(g.flies().length,0);
+    g.dispatch('keydown',{key:'Escape'});g.get('missionFailedOverlay').click();
+    assert(g.open('missionFailedOverlay'),'Escape and outside taps must not restart a failed mission');
+    g.get('restartBtn').click();assert.equal(Number(g.get('classifiedCount').textContent),0);
+    assert(!g.get('leftBtn').classList.contains('pressed'),'Restart must release held touch controls');
+    await g.catchCase();g.get('classifyBtn').click();
+    await g.until(()=>g.open('bucketOpenOverlay') && !g.get('closeBucketBtn').disabled,'Classification must work after a restart');
+    assert.equal(Number(g.get('classifiedCount').textContent),1);
+    console.log('PASS: failure summary, jump cleanup, explicit restart and classification after restart');
+  }
   {
     const expectedCounts=[1,2,10,2,1,1,2,7,6,2,2,4,6,4,1,15];
     for(const [index,count] of expectedCounts.entries()){
