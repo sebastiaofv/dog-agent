@@ -1,21 +1,38 @@
-# Agent Fetch
+# Agent Fetch — Operación expediente
 
-A browser game where a secret-agent dog catches falling complaints and files them into 16 Productos, each with its own configured Materias. Complaint cases are written in Spanish and use entirely fictional people and details.
+A standalone secret-agent arcade game in Spanish. A beagle agent catches fictional bank complaints, files them into 16 Productos with their configured Materias, and works toward a twelve-case mission.
 
 Play: https://sebastiaofv.github.io/dog-agent/
+
+## Mission rules
+
+- Archive **12 complaints** to complete a mission. Confirm the final filing with **Ver resultado** to see the mission report.
+- Missing **10 falling complaints** ends the mission. **Reiniciar misión** starts fresh.
+- A ground catch earns **50 points**; an airborne catch earns **100**.
+- Classification earns **100 points**, multiplied by consecutive classifications: ×2 from three, ×3 from six and ×4 from nine.
+- Missing or skipping a case resets the streak. Mission completion adds a bonus based on remaining opportunities.
+- The personal best and sound preference are saved locally when browser storage is available.
+
+All complaint names and details are fictional. Producto/Materia assignments are a simulation.
 
 ## Controls
 
 - Move with Left/Right or A/D, or drag across the play area.
-- Jump with Space, Up or W. Mobile also has movement and Jump buttons.
-- Missing 10 complaints ends the mission. Click **Reiniciar misión** to reset all counters and play again.
-- Classify a caught case, then click **Continue mission** after filing completes. Confirmation stays open until you continue.
+- Jump with Space, Up or W; mobile has movement and jump buttons.
+- **Pausa**, Escape or **Seguir misión** pauses/resumes play. The sound button toggles synthesized sound effects.
+- Filing dialogs wait for **Continuar misión**. Outside taps, Escape, timers and tab switching do not dismiss them.
 
-## Local development
+## Development
 
-`index.html` is the game source and includes its artwork, so it also works as a standalone file. The previous HTML filename redirects to it.
+Edit `src/game.js`, `src/styles.css` and `src/body.html`, then rebuild the standalone page:
 
-To serve it locally:
+```sh
+python3 scripts/build-game.py
+```
+
+`index.html` embeds all required artwork, styles and logic; it also works offline as a standalone file. The older HTML filename is a compatibility redirect. The build has no third-party dependencies.
+
+To serve locally:
 
 ```sh
 python3 -m http.server 8000 --bind 127.0.0.1
@@ -26,13 +43,14 @@ Open http://127.0.0.1:8000/.
 ## Validation
 
 ```sh
+python3 scripts/build-game.py --check
 node tests/game-regression.cjs
 ```
 
-These deterministic tests run the actual game script with DOM fixtures. They cover mission failure at ten misses and restarting, jumping, mobile input, classification, missing animation events, manual confirmation, the Materia counts for all 16 Productos and background-tab recovery. Check layout visually in a browser as well.
+Deterministic DOM fixtures exercise the actual compiled script: scoring and streaks, victory and final confirmation, personal best and sound persistence, blocked storage, jumping and mobile input, failure at ten misses, restart, all Producto/Materia counts, animation fallback and background-tab recovery. Check rendering in a browser separately.
 
-The original generated jump sprite and its generation prompt are in `assets/`.
+Source PNGs, lossless WebP copies and ImageGen prompts live in `assets/`. Embedded artwork uses direct CSS image declarations because oversized custom properties can be discarded by browsers.
 
 ## Deployment
 
-The GitHub Pages workflow tests and deploys pushes to `main`. It can also be started manually from the Actions tab. Pages uses GitHub Actions as its publishing source.
+The GitHub Pages workflow checks the standalone build, runs the game checks and deploys pushes to `main`. It can also be started from the Actions tab. Pages uses GitHub Actions as its publishing source.

@@ -13,7 +13,7 @@ for(const [,name,value] of stylesheet.matchAll(/(--[\w-]+)\s*:\s*(url\((?:["'])?
     `${name} exceeds the CSS custom-property image budget; popup artwork will disappear`);
 }
 
-function game({width=390,height=844,motion=false}={}) {
+function game({width=390,height=844,motion=false,storage=new Map()}={}) {
   let now=0, nextId=1;
   const timers=new Map(), frames=[], elements=new Map(), errors=[], globalListeners={};
   class Element {
@@ -65,9 +65,12 @@ function game({width=390,height=844,motion=false}={}) {
     const el=new Element();el.className='folder-slot';el.dataset.folder=number;return el;
   });
   slots.forEach(el=>get('folderSlots').appendChild(el));
+  const pips=html.match(/id="lifePips"[^>]*>([\s\S]*?)<\/div>/)?.[1] || '';
+  for(const ignored of pips.matchAll(/<i>/g))get('lifePips').appendChild(new Element());
   const document={getElementById:get,querySelectorAll:s=>s==='.folder-slot'?get('folderSlots').children.filter(el=>el.className==='folder-slot'):[],createElement:()=>new Element(),addEventListener:(t,fn)=>(globalListeners[t] ||= []).push(fn),hidden:false,activeElement:null};
   const math=Object.create(Math);math.random=()=>.5;
   const context={document,performance:{now:()=>now},Math:math,console,innerWidth:width,matchMedia:()=>({matches:motion}),getComputedStyle:()=>({bottom:'52px'}),requestAnimationFrame:fn=>(frames.push(fn),frames.length),setTimeout:(fn,ms)=>{const id=nextId++;timers.set(id,{fn,time:now+ms});return id},clearTimeout:id=>timers.delete(id),addEventListener:(t,fn)=>(globalListeners[t] ||= []).push(fn)};
+  context.localStorage={getItem(key){if(!storage)throw new Error('Storage blocked');return storage.get(key) ?? null;},setItem(key,value){if(!storage)throw new Error('Storage blocked');storage.set(key,String(value));}};
   context.window=context;
   vm.runInNewContext(code,context);
   async function advance(ms){
@@ -91,6 +94,60 @@ function game({width=390,height=844,motion=false}={}) {
   return {get,document,advance,until,dispatch,open,flies,catchCase,start,assertClear,selectProduct};
 }
 (async()=>{
+  {
+    const storage=new Map();const g=game({motion:true,storage});await g.start();
+    assert.equal(Number(g.get('scoreCount').textContent),50,'A ground catch must award 50 points');
+    for(let number=1;number<=12;number++){
+      if(number>1)await g.catchCase();
+      const before=Number(g.get('scoreCount').textContent);
+      g.get('classifyBtn').click();g.get('classifyBtn').click();
+      await g.until(()=>g.open('bucketOpenOverlay') && !g.get('closeBucketBtn').disabled,'Filing must finish during the mission');
+      const multiplier=Math.min(4,1+Math.floor(number/3));
+      assert.equal(Number(g.get('scoreCount').textContent),before+100*multiplier,'Classification must award the streak multiplier exactly once');
+      assert(g.get('filingReward').textContent.includes(`RACHA ${number}`));
+      assert.equal(g.get('missionProgress')['aria-valuenow'],String(number));
+      if(number<12){g.get('closeBucketBtn').click();assert(!g.open('missionCompleteOverlay'),'A mission must not finish early');}
+    }
+    assert.equal(g.get('closeBucketBtn').textContent,'Ver resultado');
+    await g.advance(5000);
+    assert(g.open('bucketOpenOverlay') && !g.open('missionCompleteOverlay'),'The final filing must wait for the player to confirm');
+    g.get('closeBucketBtn').click();
+    assert(g.open('missionCompleteOverlay'),'Twelve confirmed cases must complete the mission');
+    assert.equal(Number(g.get('successScore').textContent),4650,'Perfect mission must include the completion bonus');
+    assert.equal(Number(g.get('successStreak').textContent),12);
+    assert.equal(g.get('successRank').textContent,'Rango S');
+    const score=Number(g.get('scoreCount').textContent);await g.advance(4000);
+    assert.equal(Number(g.get('scoreCount').textContent),score,'Completed missions must stop gameplay');
+    g.get('nextMissionBtn').click();
+    assert(!g.open('missionCompleteOverlay'));assert.equal(Number(g.get('scoreCount').textContent),0);
+    assert.equal(Number(g.get('startBest').textContent),4650,'New missions must retain the personal best');
+    g.get('soundBtn').click();
+    const again=game({storage});
+    assert.equal(Number(again.get('startBest').textContent),4650,'Personal best must survive a new page session');
+    assert.equal(again.get('soundBtn')['aria-pressed'],'false','Sound preference must survive a new page session');
+    console.log('PASS: scoring, streak multipliers, manual final confirmation, victory, new mission and saved preferences');
+  }
+  {
+    const g=game({motion:true});await g.start();
+    g.get('classifyBtn').click();await g.until(()=>!g.get('closeBucketBtn').disabled,'First filing must finish');g.get('closeBucketBtn').click();
+    await g.catchCase();g.get('closeCaseBtn').click();
+    await g.catchCase();g.get('classifyBtn').click();await g.until(()=>!g.get('closeBucketBtn').disabled,'Filing after skip must finish');
+    assert(g.get('filingReward').textContent.includes('RACHA 1'),'Skipping must reset the streak');g.get('closeBucketBtn').click();
+    g.get('gameArea').dispatch('pointerdown',{clientX:0});g.get('gameArea').dispatch('pointerup');
+    assert.equal(g.get('dog').style['--dog-facing'],'-1','The agent must face the movement direction');
+    await g.until(()=>Number(g.get('missedCount').textContent)>0,'A missed file must break the streak',15000);
+    g.get('gameArea').dispatch('pointerdown',{clientX:195});g.get('gameArea').dispatch('pointerup');await g.catchCase();
+    g.get('classifyBtn').click();await g.until(()=>!g.get('closeBucketBtn').disabled,'Filing after miss must finish');
+    assert(g.get('filingReward').textContent.includes('RACHA 1'),'Missing must reset the streak');
+    console.log('PASS: skips and misses reset streaks; the agent faces left and right');
+  }
+  {
+    const g=game({storage:null});g.get('startBtn').click();g.get('pauseBtn').click();
+    assert(g.open('pauseOverlay'),'Pause must present a visible resume screen');
+    g.get('resumeBtn').click();assert(!g.open('pauseOverlay'));await g.catchCase();
+    assert.equal(Number(g.get('scoreCount').textContent),50,'Blocked storage must not break rewards');
+    console.log('PASS: pause screen, resume and gameplay without local storage');
+  }
   for(const dimensions of [{width:320,height:568},{width:390,height:844},{width:844,height:390},{width:1440,height:900}]){
     const g=game(dimensions);g.get('startBtn').click();
     g.get('gameArea').dispatch('pointerdown',{clientX:0});g.get('gameArea').dispatch('pointerup');
@@ -203,7 +260,7 @@ function game({width=390,height=844,motion=false}={}) {
     const nearDog=g=>g.get('gameArea').children.some(el=>el.className==='complaint' && parseFloat(el.style.top)>=480);
     for(const g of [grounded,airborne]){g.get('startBtn').click();await g.until(()=>nearDog(g),'File must approach the dog');}
     airborne.get('jumpBtn').click();
-    await airborne.advance(250);await grounded.advance(250);
+    await airborne.advance(400);await grounded.advance(400);
     assert(airborne.open('caseModal'),'Jumping must catch a higher file');
     assert(!grounded.open('caseModal'),'The same higher file must remain out of reach on the ground');
     assert(!airborne.get('dog').classList.contains('jumping'),'Opening a case must settle the dog');
@@ -213,7 +270,8 @@ function game({width=390,height=844,motion=false}={}) {
     airborne.get('classifyBtn').click();await airborne.until(()=>airborne.open('bucketOpenOverlay'),'Bucket must open');
     airborne.dispatch('keydown',{key:'ArrowUp'});
     assert(!airborne.get('dog').classList.contains('jumping'),'Jump is blocked while filing');
-    console.log('PASS: jump catches files earlier; case and folder popups block jumping');
+    assert.equal(Number(airborne.get('scoreCount').textContent),200,'An airborne catch plus filing must award the jump bonus');
+    console.log('PASS: jump catches files earlier, awards a bonus, and is blocked by dialogs');
   }
   for(const motion of [false,true]){
     const g=game({motion});g.get('startBtn').click();g.get('jumpBtn').click();await g.advance(250);
@@ -230,12 +288,12 @@ function game({width=390,height=844,motion=false}={}) {
     const g=game();await g.start();g.get('classifyBtn').click();
     await g.until(()=>g.open('bucketOpenOverlay'),'Bucket must open');
     await g.advance(12000);
-    assert(g.open('bucketOpenOverlay'),'Folder popup must remain open until Continue mission is clicked');
+    assert(g.open('bucketOpenOverlay'),'Folder popup must remain open until Continuar misión is clicked');
     g.get('bucketOpenOverlay').click();g.dispatch('keydown',{key:'Escape'});
     g.document.hidden=true;g.dispatch('visibilitychange');g.document.hidden=false;g.dispatch('visibilitychange');
     assert(g.open('bucketOpenOverlay'),'Backdrop, Escape and switching tabs must not dismiss the popup');
     g.get('closeBucketBtn').click();g.assertClear();
-    console.log('PASS: folder confirmation stays open until Continue mission');
+    console.log('PASS: folder confirmation stays open until Continuar misión');
   }
   for(const dimensions of [{width:320,height:568},{width:390,height:844},{width:844,height:390},{width:1440,height:900}]){
     const g=game(dimensions);await g.start();
@@ -253,9 +311,9 @@ function game({width=390,height=844,motion=false}={}) {
     const caught=g.get('caughtCount').textContent;
     await g.advance(12000);
     assert(g.open('bucketOpenOverlay'),'Popup must remain visible indefinitely');
-    assert.equal(g.get('caughtCount').textContent,caught,'Gameplay must wait for Continue mission');
+    assert.equal(g.get('caughtCount').textContent,caught,'Gameplay must wait for Continuar misión');
     g.get('closeBucketBtn').click();g.assertClear();
-    await g.catchCase();assert(g.get('caughtCount').textContent>1,'Gameplay must resume after Continue mission');
+    await g.catchCase();assert(g.get('caughtCount').textContent>1,'Gameplay must resume after Continuar misión');
     console.log(`PASS: ${dimensions.width}×${dimensions.height} animation fallback, manual-only confirmation, readable destination and resumed gameplay`);
   }
   for(const trigger of ['backdrop','escape','hidden-tab']){
@@ -268,7 +326,7 @@ function game({width=390,height=844,motion=false}={}) {
     await g.advance(10000);assert(g.open('bucketOpenOverlay'),`${trigger} must not dismiss confirmation`);
     g.get('closeBucketBtn').click();g.assertClear();
     await g.catchCase();assert.equal(g.get('classifiedCount').textContent,1,'Continue must preserve the filed case');
-    console.log(`PASS: ${trigger} preserves popup; Continue mission closes it and resumes gameplay`);
+    console.log(`PASS: ${trigger} preserves popup; Continuar misión closes it and resumes gameplay`);
   }
   {
     const g=game();await g.start();g.get('closeCaseBtn').click();assert(!g.open('caseModal'),'Case close button must dismiss');
@@ -276,7 +334,7 @@ function game({width=390,height=844,motion=false}={}) {
     g.dispatch('blur');const x=g.get('dog').style.left;await g.advance(350);assert.equal(g.get('dog').style.left,x,'Blur must release held movement');
     g.get('gameArea').dispatch('pointerdown',{clientX:270});assert.equal(g.get('dog').style.left,'270px','Dragging must position the dog');
     g.get('gameArea').dispatch('pointercancel');g.get('gameArea').dispatch('pointermove',{clientX:100});assert.equal(g.get('dog').style.left,'270px','Pointer cancel must end dragging');
-    g.get('pauseBtn').click();assert.equal(g.get('pauseBtn').textContent,'Resume');assert(g.get('leftBtn').disabled);
+    g.get('pauseBtn').click();assert.equal(g.get('pauseBtn').textContent,'Seguir');assert(g.get('leftBtn').disabled);
     g.get('pauseBtn').click();assert(!g.get('leftBtn').disabled);
     g.get('gameArea').dispatch('pointerdown',{clientX:195});g.get('gameArea').dispatch('pointerup');
     await g.catchCase();g.get('classifyBtn').click();await g.until(()=>g.open('bucketOpenOverlay'),'Bucket popup must open');
@@ -290,7 +348,7 @@ function game({width=390,height=844,motion=false}={}) {
   {
     const g=game({motion:true});await g.start();g.get('classifyBtn').click();
     await g.until(()=>g.open('bucketOpenOverlay') && !g.get('closeBucketBtn').disabled,'Reduced motion must complete filing',1000);
-    await g.advance(5000);assert(g.open('bucketOpenOverlay'),'Reduced motion must still require Continue mission');
+    await g.advance(5000);assert(g.open('bucketOpenOverlay'),'Reduced motion must still require Continuar misión');
     g.get('closeBucketBtn').click();g.assertClear();
     console.log('PASS: reduced motion completes without transition events and waits for Continue');
   }
@@ -300,7 +358,7 @@ function game({width=390,height=844,motion=false}={}) {
     assert(g.open('bucketOpenOverlay'),'Normal transition must advance immediately');
     await g.advance(350);g.flies()[0].dispatch('transitioncancel');await g.advance(500);
     assert(g.open('bucketOpenOverlay'),'Cancelled transition must leave confirmation open');
-    assert(!g.get('closeBucketBtn').disabled,'Cancelled transition must still enable Continue mission');
+    assert(!g.get('closeBucketBtn').disabled,'Cancelled transition must still enable Continuar misión');
     g.get('closeBucketBtn').click();g.assertClear();
     console.log('PASS: normal transition completion and cancelled transition recover cleanly');
   }

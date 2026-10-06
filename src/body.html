@@ -1,0 +1,39 @@
+<div id="app">
+  <header id="hud" aria-label="Estado de la misión">
+    <div class="hud-brand"><div class="brand-mark" aria-hidden="true">AF</div><div class="brand-name">AGENT<strong>FETCH</strong></div></div>
+    <div class="hud-score"><small>Puntos</small><strong id="scoreCount">0000</strong></div>
+    <div class="hud-tools"><button class="icon-btn" id="soundBtn" aria-label="Silenciar sonido" aria-pressed="true">♪</button><button class="icon-btn" id="pauseBtn">Pausa</button></div>
+    <div class="mission-strip">
+      <div class="mission-progress"><div class="mission-caption"><span>Operación expediente</span><strong><span id="classifiedCount">0</span> / 12</strong></div><div class="mission-bar" role="progressbar" id="missionProgress" aria-label="Expedientes archivados" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0"><span id="missionProgressFill"></span></div></div>
+      <span class="rank-pill" id="rankBadge">Recluta</span>
+      <div id="missedChip"><div class="miss-label"><span>FALLOS</span><span><strong id="missedCount">0</strong> / 10</span></div><div class="life-pips" id="lifePips" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+    </div>
+  </header>
+  <div id="gameArea">
+    <div id="dogShadow" aria-hidden="true"></div><div id="dog" aria-hidden="true"></div>
+    <aside id="bucketDock" role="img" aria-label="16 Productos"><div class="mobile-dock-card"><div id="mobileBucketIcon" class="dock-bucket-art" aria-hidden="true"></div><strong id="mobileBucketLabel">Productos</strong><small id="mobileBucketStatus">16 destinos</small></div></aside>
+    <div id="groundHint">← → / A D · MOVER &nbsp; ESPACIO / ↑ · SALTAR</div><div class="stage-note">RECUPERADAS <strong id="caughtCount">0</strong> · <span id="stageLevel">FASE 01</span></div>
+  </div>
+  <div id="touchControls"><button class="touch" id="leftBtn" aria-label="Mover a la izquierda">‹</button><button class="touch" id="rightBtn" aria-label="Mover a la derecha">›</button><button class="touch jump-touch" id="jumpBtn" aria-label="Saltar">↑<span>Saltar</span></button></div>
+  <div id="caseModal" role="dialog" aria-modal="true" aria-labelledby="caseHeading" aria-hidden="true">
+    <div class="case-card"><button class="dialog-close" id="closeCaseBtn" aria-label="Omitir y cerrar el caso">×</button>
+      <div class="case-title"><div class="case-kicker">EXPEDIENTE RECUPERADO · <strong id="caseReward">+50 PT</strong></div><h2 id="caseHeading">Reclamación bancaria</h2><small>Caso ficticio · Sin datos reales</small></div>
+      <div class="rows"><div class="row"><label>Expediente</label><div id="caseId"></div></div><div class="row"><label>Cliente</label><div id="customer"></div></div><div class="row"><label>Motivo</label><div id="issue"></div></div><div class="row"><label>Prioridad</label><div class="priority-pill" id="priority"></div></div></div>
+      <div class="summary" id="summary"></div><div class="actions"><button class="btn" id="dismissBtn">Omitir</button><button class="btn" id="classifyBtn">Clasificar</button></div>
+    </div>
+  </div>
+  <div id="bucketOpenOverlay" role="dialog" aria-modal="true" aria-labelledby="bucketOpenTitle" aria-hidden="true">
+    <div class="bucket-open-card" id="bucketOpenCard" tabindex="-1"><div class="eyebrow">Archivo central · Asignación simulada</div><div class="bucket-open-title" id="bucketOpenTitle">Producto</div><div class="bucket-zoom" id="bucketZoom"></div><p class="filing-caption" id="filingCaption" role="status">Clasificando la reclamación…</p><div class="filing-reward" id="filingReward"></div><div class="materia-heading" id="materiaHeading">Materias</div><div class="folder-slots" id="folderSlots" role="list" aria-label="Materias"></div><button class="btn continue-btn" id="closeBucketBtn">Continuar misión</button></div>
+  </div>
+  <div id="pauseOverlay" role="dialog" aria-modal="true" aria-labelledby="pauseHeading" aria-hidden="true"><div class="pause-card"><div class="eyebrow">En espera</div><h2 id="pauseHeading">Tómate un respiro.</h2><p>La misión está en pausa. Tus expedientes y tu puntuación te esperan.</p><button class="btn" id="resumeBtn">Seguir misión</button></div></div>
+  <div id="missionFailedOverlay" role="alertdialog" aria-modal="true" aria-labelledby="missionFailedTitle" aria-describedby="failureMessage" aria-hidden="true"><div class="mission-failed-card"><div class="eyebrow">Informe de operación</div><div class="failure-art" aria-hidden="true"><div id="missionFailedDog"></div><div class="failure-badge">!</div></div><h2 id="missionFailedTitle">MISIÓN FALLIDA</h2><p id="failureMessage">Diez expedientes perdidos.<br>Un buen agente siempre vuelve a intentarlo.</p><div class="result-score"><small>PUNTUACIÓN FINAL</small><span id="failureScore">0</span></div><div class="failure-stats"><div class="failure-stat"><strong id="failureCaught">0</strong><span>Recuperadas</span></div><div class="failure-stat"><strong id="failureClassified">0</strong><span>Archivadas</span></div><div class="failure-stat"><strong>10</strong><span>Perdidas</span></div></div><div class="result-record">RÉCORD PERSONAL · <strong id="failureBest">0</strong></div><button class="btn" id="restartBtn">Reiniciar misión</button></div></div>
+  <div id="missionCompleteOverlay" role="dialog" aria-modal="true" aria-labelledby="missionCompleteTitle" aria-hidden="true"><div class="success-card"><div class="eyebrow">Operación completada</div><div class="success-art" aria-hidden="true"><div id="successDog"></div><div class="success-badge">★</div></div><h2 id="missionCompleteTitle">MISIÓN CUMPLIDA</h2><p>Doce expedientes a salvo.<br><strong id="successRank">Agente de élite</strong>, trabajo impecable.</p><div class="result-score"><small>PUNTUACIÓN FINAL</small><span id="successScore">0</span></div><div class="failure-stats"><div class="failure-stat"><strong id="successClassified">12</strong><span>Archivadas</span></div><div class="failure-stat"><strong id="successMissed">0</strong><span>Perdidas</span></div><div class="failure-stat"><strong id="successStreak">0</strong><span>Mejor racha</span></div></div><div class="result-record">RÉCORD PERSONAL · <strong id="successBest">0</strong></div><button class="btn" id="nextMissionBtn">Otra misión</button></div></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="startOverlay" role="dialog" aria-modal="true" aria-labelledby="gameTitle"><div class="start-card">
+    <div class="briefing-top"><span class="briefing-code mono">AGENCIA CANINA / OPERACIÓN 001</span><span class="classified-stamp mono">CONFIDENCIAL</span></div>
+    <div class="start-hero"><div><div class="eyebrow">Tu próxima misión</div><h1 id="gameTitle">AGENT<span>FETCH.</span></h1><p class="start-tagline">Atrapa. Clasifica. Repite.<br>El mejor agente de la ciudad eres tú.</p></div><div class="hero-agent" aria-hidden="true"><div id="startDog"></div><span class="agent-id mono">AGENTE AF–01</span></div></div>
+    <div class="briefing-objective"><span><strong>12</strong> expedientes para ganar</span><span><strong>10</strong> fallos y misión fallida</span></div>
+    <div class="briefing-controls"><div class="control-tip"><div class="tip-icon">← →</div><b>Mueve</b><small>Flechas, A / D o arrastra al agente.</small></div><div class="control-tip"><div class="tip-icon">↑</div><b>Salta</b><small>Espacio, ↑ o W. Atrapa en el aire: +50.</small></div><div class="control-tip"><div class="tip-icon">✦</div><b>Encadena</b><small>Archiva sin fallar y multiplica los puntos.</small></div></div>
+    <button class="btn" id="startBtn">Iniciar misión →</button><div class="start-footer"><span>RÉCORD PERSONAL · <strong id="startBest">0</strong></span><span>Casos ficticios · 16 Productos</span></div>
+  </div></div>
+</div>
