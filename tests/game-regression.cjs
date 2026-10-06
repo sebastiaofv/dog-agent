@@ -5,6 +5,14 @@ const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const html = fs.readFileSync(process.argv[2] || 'index.html', 'utf8');
 const code = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+// Browsers discard oversized custom-property values. Keep large embedded
+// artwork in image declarations so it cannot silently resolve to "none".
+const stylesheet = html.match(/<style>([\s\S]*?)<\/style>/)[1];
+for(const [,name,value] of stylesheet.matchAll(/(--[\w-]+)\s*:\s*(url\((?:["'])?data:[\s\S]*?\))/g)){
+  assert(Buffer.byteLength(value,'utf8') <= 1024*1024,
+    `${name} exceeds the CSS custom-property image budget; popup artwork will disappear`);
+}
+
 function game({width=390,height=844,motion=false}={}) {
   let now=0, nextId=1;
   const timers=new Map(), frames=[], elements=new Map(), errors=[], globalListeners={};
