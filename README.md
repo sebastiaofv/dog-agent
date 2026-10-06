@@ -1,6 +1,6 @@
 # Agent Fetch
 
-A browser game where a secret-agent dog catches falling complaints and files them into 16 buckets.
+A browser game where a secret-agent dog catches falling complaints and files them into 16 Productos, each containing five Materias.
 
 Play: https://sebastiaofv.github.io/dog-agent/
 

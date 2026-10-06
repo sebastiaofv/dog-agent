@@ -443,10 +443,10 @@
   <div id="gameArea">
     <div id="dogShadow" aria-hidden="true"></div>
     <div id="dog" aria-hidden="true"></div>
-    <div id="bucketDock" role="img" aria-label="16 classification buckets">
+    <div id="bucketDock" role="img" aria-label="16 Productos">
       <div class="mobile-dock-card">
         <div id="mobileBucketIcon" class="dock-bucket-art" aria-hidden="true"></div>
-        <strong id="mobileBucketLabel">Buckets</strong>
+        <strong id="mobileBucketLabel">Productos</strong>
         <small id="mobileBucketStatus">16 destinations</small>
       </div>
     </div>
@@ -486,15 +486,15 @@
 
   <div id="bucketOpenOverlay" role="dialog" aria-modal="true" aria-labelledby="bucketOpenTitle" aria-hidden="true">
     <div class="bucket-open-card" id="bucketOpenCard" tabindex="-1">
-      <div class="bucket-open-title" id="bucketOpenTitle">Opening bucket…</div>
+      <div class="bucket-open-title" id="bucketOpenTitle">Producto</div>
       <div class="bucket-zoom" id="bucketZoom"></div>
-      <p class="filing-caption" id="filingCaption" role="status">Filing your complaint in the highlighted folder.</p>
+      <p class="filing-caption" id="filingCaption" role="status">Filing your complaint in the highlighted Materia.</p>
       <div class="folder-slots" id="folderSlots">
-        <div class="folder-slot" data-folder="1">Folder 1<small>Front</small></div>
-        <div class="folder-slot" data-folder="2">Folder 2<small>Review</small></div>
-        <div class="folder-slot" data-folder="3">Folder 3<small>Investigate</small></div>
-        <div class="folder-slot" data-folder="4">Folder 4<small>Escalate</small></div>
-        <div class="folder-slot" data-folder="5">Folder 5<small>Archive</small></div>
+        <div class="folder-slot" data-folder="1">Materia 1<small>Front</small></div>
+        <div class="folder-slot" data-folder="2">Materia 2<small>Review</small></div>
+        <div class="folder-slot" data-folder="3">Materia 3<small>Investigate</small></div>
+        <div class="folder-slot" data-folder="4">Materia 4<small>Escalate</small></div>
+        <div class="folder-slot" data-folder="5">Materia 5<small>Archive</small></div>
       </div>
       <button class="btn continue-btn" id="closeBucketBtn">Continue mission</button>
     </div>
@@ -505,7 +505,7 @@
   <div id="startOverlay">
     <div class="start-card">
       <h1>Agent Fetch</h1>
-      <p>Complaint files are raining over the city. Guide the secret-agent dog to catch them. Jump to reach files earlier! Each catch opens a fictitious bank complaint case. Hit <b>CLASSIFY</b> and the case gets assigned to one of 16 buckets at random.</p>
+      <p>Complaint files are raining over the city. Guide the secret-agent dog to catch them. Jump to reach files earlier! Each catch opens a fictitious bank complaint case. Hit <b>CLASSIFY</b> and the case gets assigned to one of 16 Productos at random.</p>
       <p><b>Controls:</b> Left/Right arrows or A/D to move; Space, ↑ or W to jump. On mobile, drag or hold the arrow buttons, and tap Jump.</p>
       <button class="btn" id="startBtn">Start Mission</button>
     </div>
@@ -808,10 +808,10 @@
   function showOpenedBucket(bucket, folder){
     setBucketSprite(bucketZoom, bucket);
     bucketOpenCard.classList.remove('filed');
-    filingCaption.textContent = 'Filing your complaint in the highlighted folder…';
+    filingCaption.textContent = 'Filing your complaint in the highlighted Materia…';
     continueBtn.disabled = true;
     continueBtn.textContent = 'Filing…';
-    bucketOpenTitle.textContent = `Bucket ${bucket} opened`;
+    bucketOpenTitle.textContent = `Producto ${bucket}`;
     folderSlots.forEach(el => el.classList.toggle('active', Number(el.dataset.folder) === folder));
     showOverlay(bucketOpenOverlay, 'show', true);
     bucketOpenCard.classList.add('open');
@@ -877,9 +877,9 @@
     const bucket = 1 + Math.floor(Math.random()*16);
     const folder = chooseInternalFolder(caseCopy);
     setBucketSprite(mobileBucketIcon, bucket);
-    mobileBucketLabel.textContent = `Bucket ${bucket}`;
+    mobileBucketLabel.textContent = `Producto ${bucket}`;
     mobileBucketStatus.textContent = 'Filing…';
-    bucketDock.setAttribute('aria-label', `Filing in Bucket ${bucket}`);
+    bucketDock.setAttribute('aria-label', `Filing in Producto ${bucket}`);
     classified++;
     classifiedEl.textContent = classified;
     closeCase();
@@ -897,10 +897,10 @@
       if(run === sequence){
         // Animation completes independently; confirmation belongs to the player.
         bucketOpenTitle.textContent = 'Case filed';
-        filingCaption.textContent = `${caseCopy.id} → Bucket ${bucket} · Folder ${folder}`;
+        filingCaption.textContent = `${caseCopy.id} → Producto ${bucket} · Materia ${folder}`;
         bucketOpenCard.classList.add('filed');
-        mobileBucketStatus.textContent = `Folder ${folder} · filed`;
-        bucketDock.setAttribute('aria-label', `Last filed: Bucket ${bucket}, Folder ${folder}`);
+        mobileBucketStatus.textContent = `Materia ${folder} · filed`;
+        bucketDock.setAttribute('aria-label', `Last filed: Producto ${bucket}, Materia ${folder}`);
         continueBtn.disabled = false;
         continueBtn.textContent = 'Continue mission';
         if(!document.hidden) continueBtn.focus({preventScroll:true});
