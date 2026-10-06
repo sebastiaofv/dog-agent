@@ -200,10 +200,10 @@ function game({width=390,height=844,motion=false}={}) {
     assert(g.get('closeBucketBtn').disabled,'Continue must wait for filing to finish');
     g.get('closeBucketBtn').click();assert(g.open('bucketOpenOverlay'),'Early taps must not interrupt filing');
     await g.until(()=>!g.get('closeBucketBtn').disabled,'Filing must finish without transitionend');
-    assert.equal(g.get('bucketOpenTitle').textContent,'Case filed');
+    assert.equal(g.get('bucketOpenTitle').textContent,'Reclamación clasificada');
     assert(g.get('filingCaption').textContent.includes('Producto 9'),'Confirmation must show the assigned bucket');
     assert.equal(g.get('mobileBucketLabel').textContent,'Producto 9','Mobile tray must show the latest destination');
-    assert(g.get('mobileBucketStatus').textContent.includes('filed'),'Mobile tray must reflect completed filing');
+    assert(g.get('mobileBucketStatus').textContent.includes('lista'),'Mobile tray must reflect completed filing');
     assert.equal(g.get('classifiedCount').textContent,1,'Repeated clicks must file only once');
     assert.equal(g.flies().length,0,'Animation files must be cleaned up even while confirmation stays open');
     const caught=g.get('caughtCount').textContent;

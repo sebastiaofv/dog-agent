@@ -479,26 +479,26 @@
     <button class="touch jump-touch" id="jumpBtn" aria-label="Jump">↥<span>Jump</span></button>
   </div>
 
-  <div id="caseModal" role="dialog" aria-modal="true" aria-labelledby="caseHeading" aria-hidden="true">
+  <div id="caseModal" lang="es" role="dialog" aria-modal="true" aria-labelledby="caseHeading" aria-hidden="true">
     <div class="case-card">
-      <button class="dialog-close" id="closeCaseBtn" aria-label="Skip and close case">×</button>
+      <button class="dialog-close" id="closeCaseBtn" aria-label="Omitir y cerrar el caso">×</button>
       <div class="case-title">
         <div class="bank-icon">🏦</div>
         <div>
-          <h2 id="caseHeading">Bank Complaint Case</h2>
-          <small>All names and details are fictitious.</small>
+          <h2 id="caseHeading">Reclamación bancaria</h2>
+          <small>Caso ficticio · Sin datos reales</small>
         </div>
       </div>
       <div class="rows">
-        <div class="row"><label>Case #</label><div id="caseId"></div></div>
-        <div class="row"><label>Customer</label><div id="customer"></div></div>
-        <div class="row"><label>Issue</label><div id="issue"></div></div>
-        <div class="row"><label>Priority</label><div id="priority"></div></div>
+        <div class="row"><label>Expediente</label><div id="caseId"></div></div>
+        <div class="row"><label>Cliente</label><div id="customer"></div></div>
+        <div class="row"><label>Motivo</label><div id="issue"></div></div>
+        <div class="row"><label>Prioridad</label><div id="priority"></div></div>
       </div>
       <div class="summary" id="summary"></div>
       <div class="actions">
-        <button class="btn" id="dismissBtn">Skip</button>
-        <button class="btn" id="classifyBtn">CLASSIFY</button>
+        <button class="btn" id="dismissBtn">Omitir</button>
+        <button class="btn" id="classifyBtn">CLASIFICAR</button>
       </div>
     </div>
   </div>
@@ -508,7 +508,7 @@
     <div class="bucket-open-card" id="bucketOpenCard" tabindex="-1">
       <div class="bucket-open-title" id="bucketOpenTitle">Producto</div>
       <div class="bucket-zoom" id="bucketZoom"></div>
-      <p class="filing-caption" id="filingCaption" role="status">Filing your complaint in the highlighted Materia.</p>
+      <p class="filing-caption" id="filingCaption" role="status">Clasificando la reclamación en la Materia indicada.</p>
       <div class="materia-heading" id="materiaHeading">Materias</div>
       <div class="folder-slots" id="folderSlots" role="list" aria-label="Materias"></div>
       <button class="btn continue-btn" id="closeBucketBtn">Continue mission</button>
@@ -520,7 +520,7 @@
   <div id="startOverlay">
     <div class="start-card">
       <h1>Agent Fetch</h1>
-      <p>Complaint files are raining over the city. Guide the secret-agent dog to catch them. Jump to reach files earlier! Each catch opens a fictitious bank complaint case. Hit <b>CLASSIFY</b> and the case gets assigned to one of 16 Productos at random.</p>
+      <p>Complaint files are raining over the city. Guide the secret-agent dog to catch them. Jump to reach files earlier! Each catch opens a fictitious bank complaint case in Spanish. Hit <b>CLASIFICAR</b> and the case gets assigned to one of 16 Productos at random.</p>
       <p><b>Controls:</b> Left/Right arrows or A/D to move; Space, ↑ or W to jump. On mobile, drag or hold the arrow buttons, and tap Jump.</p>
       <button class="btn" id="startBtn">Start Mission</button>
     </div>
@@ -703,27 +703,76 @@
     });
   }
 
-  const firstNames = ['Alex','Maya','Jordan','Sam','Taylor','Riley','Morgan','Jamie','Casey','Avery','Noah','Sofia'];
-  const lastNames = ['Johnson','Rivera','Patel','Murphy','Chen','Walker','Silva','Brown','Kim','Martins','Davis','Lopez'];
+  // Synthetic people and scenarios for the game; no real customer data.
+  const firstNames = ["Lucía", "Mateo", "Sofía", "Hugo", "Elena", "Diego", "Valeria", "Pablo", "Daniela", "Álvaro", "Clara", "Marcos"];
+  const lastNames = ["García", "López", "Martín", "Ruiz", "Torres", "Navarro", "Serrano", "Molina", "Ortega", "Vega", "Romero", "Castro"];
   const issues = [
-    ['Unauthorized card charge', '$299 charge not recognized by the customer.'],
-    ['ATM cash dispute', 'Customer says the ATM debited the account but dispensed no cash.'],
-    ['Duplicate transaction', 'The same merchant purchase appears twice on the statement.'],
-    ['Transfer delay', 'An outbound transfer has not arrived within the expected timeframe.'],
-    ['Account fee dispute', 'Customer disputes a recently applied service fee.'],
-    ['Card delivery issue', 'Replacement card has not arrived at the registered address.'],
-    ['Direct debit complaint', 'Customer says a debit was collected after cancellation.'],
-    ['Online banking access', 'Customer cannot sign in after changing their phone number.'],
-    ['Cash deposit mismatch', 'Branch cash deposit amount does not match the customer receipt.'],
-    ['Interest calculation', 'Customer questions the interest credited to a savings account.'],
-    ['Chargeback status', 'Customer requests an update on a merchant dispute already filed.'],
-    ['Loan payment allocation', 'Customer says a loan payment was applied to the wrong balance.'],
-    ['Standing order problem', 'Scheduled payment was sent for an unexpected amount.'],
-    ['Card declined abroad', 'Customer reports repeated card declines while travelling.'],
-    ['Statement error', 'Customer found an incorrect description on a monthly statement.'],
-    ['Identity verification', 'Customer says verification failed despite valid documents.']
-  ];
-  const priorities = ['Low','Medium','High','Urgent'];
+  [
+    "Cargo no reconocido",
+    "La persona titular detecta un cargo de 299 € por una compra que asegura no haber realizado. Solicita que se revise la operación y se le devuelva el importe."
+  ],
+  [
+    "Retirada de efectivo fallida",
+    "Un cajero descontó 120 € del saldo, pero no entregó el efectivo. La persona titular solicita la devolución del importe y la revisión de la incidencia."
+  ],
+  [
+    "Cargo duplicado",
+    "Una compra de 46,50 € aparece cobrada dos veces en el extracto. La persona titular afirma que solo realizó una compra y solicita corregir el cargo duplicado."
+  ],
+  [
+    "Transferencia retrasada",
+    "Una transferencia de 350 € enviada hace tres días aún no aparece en la cuenta de destino. La persona titular solicita información sobre su estado."
+  ],
+  [
+    "Comisión no reconocida",
+    "Se ha aplicado una comisión de mantenimiento de 18 € que la persona titular no esperaba. Solicita conocer el motivo y que se revise el cobro."
+  ],
+  [
+    "Tarjeta no entregada",
+    "La tarjeta de sustitución no ha llegado al domicilio indicado tras dos semanas. La persona titular solicita comprobar el envío y recibir una nueva tarjeta."
+  ],
+  [
+    "Recibo tras cancelación",
+    "Se ha cobrado un recibo de 29 € después de que la persona titular cancelara la domiciliación. Solicita revisar el cargo y evitar nuevos cobros."
+  ],
+  [
+    "Acceso a banca digital bloqueado",
+    "La persona titular no puede acceder a la banca digital desde que cambió de número de teléfono. Solicita recuperar el acceso y actualizar sus datos de contacto."
+  ],
+  [
+    "Diferencia en ingreso de efectivo",
+    "La persona titular ingresó 200 € en una oficina, pero solo se reflejan 150 € en la cuenta. Conserva el justificante y solicita corregir la diferencia."
+  ],
+  [
+    "Cálculo de intereses",
+    "Los intereses abonados en la cuenta de ahorro parecen inferiores a los esperados. La persona titular solicita una explicación del cálculo y la revisión del importe."
+  ],
+  [
+    "Seguimiento de una reclamación",
+    "La persona titular presentó una reclamación por una compra de 85 € y todavía no ha recibido respuesta. Solicita una actualización sobre el estado del expediente."
+  ],
+  [
+    "Pago de préstamo mal aplicado",
+    "Una cuota de 240 € se ha aplicado a un préstamo distinto del indicado por la persona titular. Solicita corregir la asignación y revisar el saldo pendiente."
+  ],
+  [
+    "Importe incorrecto en pago periódico",
+    "Un pago periódico se ha enviado por 90 € en lugar de los 60 € configurados. La persona titular solicita revisar la orden y corregir la diferencia."
+  ],
+  [
+    "Tarjeta rechazada en el extranjero",
+    "Durante un viaje, la tarjeta ha sido rechazada en varias compras pese a disponer de saldo. La persona titular solicita revisar el motivo del rechazo."
+  ],
+  [
+    "Error en el extracto",
+    "El extracto mensual incluye una descripción incorrecta en una operación. La persona titular solicita comprobar el movimiento y emitir un extracto corregido."
+  ],
+  [
+    "Verificación de identidad fallida",
+    "La verificación digital rechaza el documento de identidad presentado por la persona titular. Solicita revisar la incidencia y disponer de otra forma de verificación."
+  ]
+];
+  const priorities = ['Baja','Media','Alta','Urgente'];
 
   function rand(arr){ return arr[Math.floor(Math.random()*arr.length)] }
   function makeCase(){
@@ -844,9 +893,9 @@
       folderSlots.push(slot);
     }
     bucketOpenCard.classList.remove('filed');
-    filingCaption.textContent = 'Filing your complaint in the highlighted Materia…';
+    filingCaption.textContent = 'Clasificando la reclamación en la Materia indicada…';
     continueBtn.disabled = true;
-    continueBtn.textContent = 'Filing…';
+    continueBtn.textContent = 'Clasificando…';
     bucketOpenTitle.textContent = `Producto ${bucket}`;
     folderSlots.forEach(el => el.classList.toggle('active', Number(el.dataset.folder) === folder));
     showOverlay(bucketOpenOverlay, 'show', true);
@@ -915,8 +964,8 @@
     const folder = chooseInternalFolder(caseCopy,bucket);
     setBucketSprite(mobileBucketIcon, bucket);
     mobileBucketLabel.textContent = `Producto ${bucket}`;
-    mobileBucketStatus.textContent = 'Filing…';
-    bucketDock.setAttribute('aria-label', `Filing in Producto ${bucket}`);
+    mobileBucketStatus.textContent = 'Clasificando…';
+    bucketDock.setAttribute('aria-label', `Clasificando en Producto ${bucket}`);
     classified++;
     classifiedEl.textContent = classified;
     closeCase();
@@ -933,11 +982,11 @@
     } finally {
       if(run === sequence){
         // Animation completes independently; confirmation belongs to the player.
-        bucketOpenTitle.textContent = 'Case filed';
+        bucketOpenTitle.textContent = 'Reclamación clasificada';
         filingCaption.textContent = `${caseCopy.id} → Producto ${bucket} · Materia ${folder}`;
         bucketOpenCard.classList.add('filed');
-        mobileBucketStatus.textContent = `Materia ${folder} · filed`;
-        bucketDock.setAttribute('aria-label', `Last filed: Producto ${bucket}, Materia ${folder}`);
+        mobileBucketStatus.textContent = `Materia ${folder} · lista`;
+        bucketDock.setAttribute('aria-label', `Última clasificación: Producto ${bucket}, Materia ${folder}`);
         continueBtn.disabled = false;
         continueBtn.textContent = 'Continue mission';
         if(!document.hidden) continueBtn.focus({preventScroll:true});
@@ -1055,7 +1104,7 @@
   function skipCase(){
     if(!modalOpen) return;
     closeCase();
-    showToast('Case skipped');
+    showToast('Caso omitido');
   }
   function togglePause(){
     if(!running || modalOpen || classifying) return;
