@@ -1,6 +1,6 @@
 # Agent Fetch
 
-A browser game where a secret-agent dog catches falling complaints and files them into 16 Productos, each containing five Materias.
+A browser game where a secret-agent dog catches falling complaints and files them into 16 Productos, each with its own configured Materias.
 
 Play: https://sebastiaofv.github.io/dog-agent/
 
@@ -28,7 +28,7 @@ Open http://127.0.0.1:8000/.
 node tests/game-regression.cjs
 ```
 
-These deterministic tests run the actual game script with DOM fixtures. They cover jumping, mobile input, classification, missing animation events, manual confirmation and background-tab recovery. Check layout visually in a browser as well.
+These deterministic tests run the actual game script with DOM fixtures. They cover jumping, mobile input, classification, missing animation events, manual confirmation, the Materia counts for all 16 Productos and background-tab recovery. Check layout visually in a browser as well.
 
 The original generated jump sprite and its generation prompt are in `assets/`.
 

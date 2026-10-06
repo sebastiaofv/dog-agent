@@ -421,6 +421,25 @@
   .bucket-open-card .continue-btn{position:sticky;bottom:0}
   /* Percentage height respects each overlay's actual safe-area padding. */
   .case-card,.bucket-open-card,.start-card{max-height:100%}
+  /* Keep long Materia lists inside the popup, with Continue always visible. */
+  .bucket-open-card{display:flex;flex-direction:column;overflow:hidden}
+  .bucket-open-title,.filing-caption,.materia-heading,.continue-btn{flex-shrink:0}
+  .bucket-zoom{margin:0 auto 10px}
+  .materia-heading{font-size:12px;font-weight:850;color:#655534;margin:0 0 6px}
+  .folder-slots{
+    width:100%;grid-template-columns:repeat(var(--materia-columns,5),minmax(0,1fr));
+    min-height:48px;max-height:min(240px,30dvh);overflow-y:auto;flex-shrink:1;
+    overscroll-behavior:contain;padding:4px 2px;scrollbar-width:thin;
+  }
+  @media (max-width:560px){
+    .folder-slots{grid-template-columns:repeat(var(--materia-mobile-columns,3),minmax(0,1fr))}
+    .bucket-zoom{width:min(200px,52vw,28dvh)}
+  }
+  @media (max-height:520px) and (orientation:landscape){
+    .folder-slots{grid-template-columns:repeat(var(--materia-columns,5),minmax(0,1fr));max-height:25dvh}
+    .bucket-zoom{width:110px;margin-bottom:4px}
+    .materia-heading{font-size:11px;margin-bottom:3px}
+  }
   @media (prefers-reduced-motion:reduce){
     *,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important}
     #dog.catching{transform:translateX(-50%)}
@@ -490,13 +509,8 @@
       <div class="bucket-open-title" id="bucketOpenTitle">Producto</div>
       <div class="bucket-zoom" id="bucketZoom"></div>
       <p class="filing-caption" id="filingCaption" role="status">Filing your complaint in the highlighted Materia.</p>
-      <div class="folder-slots" id="folderSlots">
-        <div class="folder-slot" data-folder="1">Materia 1<small>Front</small></div>
-        <div class="folder-slot" data-folder="2">Materia 2<small>Review</small></div>
-        <div class="folder-slot" data-folder="3">Materia 3<small>Investigate</small></div>
-        <div class="folder-slot" data-folder="4">Materia 4<small>Escalate</small></div>
-        <div class="folder-slot" data-folder="5">Materia 5<small>Archive</small></div>
-      </div>
+      <div class="materia-heading" id="materiaHeading">Materias</div>
+      <div class="folder-slots" id="folderSlots" role="list" aria-label="Materias"></div>
       <button class="btn continue-btn" id="closeBucketBtn">Continue mission</button>
     </div>
   </div>
@@ -529,7 +543,9 @@
   const mobileBucketStatus = document.getElementById('mobileBucketStatus');
   const continueBtn = document.getElementById('closeBucketBtn');
   const filingCaption = document.getElementById('filingCaption');
-  const folderSlots = [...document.querySelectorAll('.folder-slot')];
+  const materiaContainer = document.getElementById('folderSlots');
+  const materiaHeading = document.getElementById('materiaHeading');
+  const folderSlots = [];
   const caseModal = document.getElementById('caseModal');
   const pauseBtn = document.getElementById('pauseBtn');
   const toast = document.getElementById('toast');
@@ -565,6 +581,8 @@
   const jumpBtn = document.getElementById('jumpBtn');
   const classifyBtn = document.getElementById('classifyBtn');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  // Indexed by Producto number minus one; each Producto owns its Materias.
+  const materiaCounts = [1,2,10,2,1,1,2,7,6,2,2,4,6,4,1,15];
 
   // Artwork uses uneven row spacing; equal 4×4 cells cut off the buckets.
   // Each rectangle includes the whole numbered bucket and a little edge padding.
@@ -799,15 +817,32 @@
   }
 
 
-  function chooseInternalFolder(c){
-    // Stable "correct" sub-folder for the generated case.
+  function chooseInternalFolder(c, bucket){
+    // Stable assignment within the selected Producto's configured Materias.
     const issueIndex = issues.findIndex(i => i[0] === c.issue);
     const priorityIndex = Math.max(0, priorities.indexOf(c.priority));
-    return ((Math.max(0, issueIndex) + priorityIndex) % 5) + 1;
+    return ((Math.max(0, issueIndex) + priorityIndex) % materiaCounts[bucket-1]) + 1;
   }
 
   function showOpenedBucket(bucket, folder){
     setBucketSprite(bucketZoom, bucket);
+    const count = materiaCounts[bucket-1];
+    materiaContainer.replaceChildren();
+    folderSlots.length = 0;
+    materiaContainer.style.setProperty('--materia-columns', Math.min(count,5));
+    materiaContainer.style.setProperty('--materia-mobile-columns', Math.min(count,3));
+    materiaContainer.setAttribute('aria-label', `Materias del Producto ${bucket}`);
+    materiaHeading.textContent = `${count} ${count===1 ? 'Materia' : 'Materias'}`;
+    for(let number=1;number<=count;number++){
+      const slot = document.createElement('div');
+      slot.className = 'folder-slot';
+      slot.dataset.folder = String(number);
+      slot.textContent = `Materia ${number}`;
+      slot.setAttribute('role','listitem');
+      if(number===folder) slot.setAttribute('aria-current','true');
+      materiaContainer.appendChild(slot);
+      folderSlots.push(slot);
+    }
     bucketOpenCard.classList.remove('filed');
     filingCaption.textContent = 'Filing your complaint in the highlighted Materia…';
     continueBtn.disabled = true;
@@ -828,6 +863,7 @@
   function animateFileIntoFolder(bucket, folder){
     const appRect = app.getBoundingClientRect();
     const targetEl = folderSlots[folder - 1];
+    targetEl.scrollIntoView({block:'nearest',inline:'nearest',behavior:'auto'});
     const targetRect = targetEl.getBoundingClientRect();
     const size = window.innerWidth <= 900 ? 70 : 88;
     const fly = document.createElement('div');
@@ -875,8 +911,8 @@
     const run = ++sequence;
     const caseCopy = {...activeCase};
     const startRect = classifyBtn.getBoundingClientRect();
-    const bucket = 1 + Math.floor(Math.random()*16);
-    const folder = chooseInternalFolder(caseCopy);
+    const bucket = 1 + Math.floor(Math.random()*materiaCounts.length);
+    const folder = chooseInternalFolder(caseCopy,bucket);
     setBucketSprite(mobileBucketIcon, bucket);
     mobileBucketLabel.textContent = `Producto ${bucket}`;
     mobileBucketStatus.textContent = 'Filing…';

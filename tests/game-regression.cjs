@@ -52,11 +52,20 @@ function game({width=390,height=844,motion=false}={}) {
     focus(){document.activeElement=this;}
     contains(el){return el===this||this.children.includes(el);}
     querySelectorAll(){return [];}
+    replaceChildren(...children){
+      for(const child of this.children)child.parent=null;
+      this.children=[];
+      children.forEach(child=>this.appendChild(child));
+    }
+    scrollIntoView(){this.scrolledIntoView=true;}
     setPointerCapture(){}
   }
   const get=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id)};
-  const slots=Array.from({length:5},(_,i)=>{const el=new Element();el.dataset.folder=String(i+1);return el});
-  const document={getElementById:get,querySelectorAll:s=>s==='.folder-slot'?slots:[],createElement:()=>new Element(),addEventListener:(t,fn)=>(globalListeners[t] ||= []).push(fn),hidden:false,activeElement:null};
+  const slots=[...html.matchAll(/class="folder-slot"\s+data-folder="(\d+)"/g)].map(([,number])=>{
+    const el=new Element();el.className='folder-slot';el.dataset.folder=number;return el;
+  });
+  slots.forEach(el=>get('folderSlots').appendChild(el));
+  const document={getElementById:get,querySelectorAll:s=>s==='.folder-slot'?get('folderSlots').children.filter(el=>el.className==='folder-slot'):[],createElement:()=>new Element(),addEventListener:(t,fn)=>(globalListeners[t] ||= []).push(fn),hidden:false,activeElement:null};
   const math=Object.create(Math);math.random=()=>.5;
   const context={document,performance:{now:()=>now},Math:math,console,innerWidth:width,matchMedia:()=>({matches:motion}),getComputedStyle:()=>({bottom:'52px'}),requestAnimationFrame:fn=>(frames.push(fn),frames.length),setTimeout:(fn,ms)=>{const id=nextId++;timers.set(id,{fn,time:now+ms});return id},clearTimeout:id=>timers.delete(id),addEventListener:(t,fn)=>(globalListeners[t] ||= []).push(fn)};
   context.window=context;
@@ -78,9 +87,39 @@ function game({width=390,height=844,motion=false}={}) {
   async function catchCase(){await until(()=>open('caseModal'),'A falling file must open a case');}
   async function start(){get('startBtn').click();await catchCase();}
   function assertClear(){assert(!open('bucketOpenOverlay'),'Folder popup remains stuck');assert.equal(flies().length,0,'Flying files must be cleaned up');}
-  return {get,document,advance,until,dispatch,open,flies,catchCase,start,assertClear};
+  function selectProduct(product){math.random=()=>(product-.5)/16;}
+  return {get,document,advance,until,dispatch,open,flies,catchCase,start,assertClear,selectProduct};
 }
 (async()=>{
+  {
+    const expectedCounts=[1,2,10,2,1,1,2,7,6,2,2,4,6,4,1,15];
+    for(const [index,count] of expectedCounts.entries()){
+      const product=index+1;
+      const g=game({width:320,height:568});await g.start();g.selectProduct(product);g.get('classifyBtn').click();
+      await g.until(()=>g.open('bucketOpenOverlay'),'Producto popup must open');
+      const entries=g.get('folderSlots').children;
+      assert.equal(entries.length,count,`Producto ${product} must show exactly ${count} Materias`);
+      assert.deepEqual(entries.map(el=>Number(el.dataset.folder)),Array.from({length:count},(_,i)=>i+1),'Materia numbering must be contiguous');
+      const active=entries.filter(el=>el.classList.contains('active'));
+      assert.equal(active.length,1,'Exactly one valid Materia must be selected');
+      const chosen=Number(active[0].dataset.folder);
+      assert(chosen>=1 && chosen<=count,'Chosen Materia must belong to the Producto');
+      if(product===16)assert.equal(chosen,11,'Producto 16 must support assigning a Materia beyond five');
+      await g.until(()=>!g.get('closeBucketBtn').disabled,'Filing animation must complete for every Producto');
+      assert(g.get('filingCaption').textContent.includes(`Materia ${chosen}`),'Confirmation must match the actual target');
+      g.get('closeBucketBtn').click();g.assertClear();
+    }
+    console.log('PASS: exact Materia counts and valid classification targets for all 16 Productos');
+  }
+  {
+    const g=game();await g.start();g.selectProduct(16);g.get('classifyBtn').click();
+    await g.until(()=>g.open('bucketOpenOverlay') && !g.get('closeBucketBtn').disabled,'Producto 16 must finish');
+    g.get('closeBucketBtn').click();await g.catchCase();g.selectProduct(1);g.get('classifyBtn').click();
+    await g.until(()=>g.open('bucketOpenOverlay'),'Producto 1 must open after Producto 16');
+    assert.equal(g.get('folderSlots').children.length,1,'A smaller Producto must remove stale Materias');
+    assert.equal(g.get('folderSlots').children[0].dataset.folder,'1');
+    console.log('PASS: switching from 15 Materias to one removes stale entries');
+  }
   {
     const g=game();g.get('startBtn').click();
     g.dispatch('keydown',{key:' '});
